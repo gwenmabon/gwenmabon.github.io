@@ -1,0 +1,23 @@
+# Navigation Links
+# Hugo docs: https://gohugo.io/content-management/menus/
+# Hextra menu params: https://imfing.github.io/hextra/docs/guide/configuration/
+
+main:
+  - name: Field Notes
+    pageRef: /field-notes
+    weight: 1
+  - name: About
+    pageRef: /about
+    weight: 2
+  - name: Research
+    pageRef: /research
+    weight: 3
+  - name: Search
+    weight: 4
+    params:
+      type: search
+  - name: GitHub
+    weight: 5
+    url: "https://github.com/gwenmabon/gwenmabon.github.io"
+    params:
+      icon: github

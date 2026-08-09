@@ -1,0 +1,57 @@
+# Configuration of Hugo
+# Hugo Documentation: https://gohugo.io/getting-started/configuration/#all-configuration-settings
+
+title: Gwennaëlle Mabon
+baseURL: 'https://gwenmabon.github.io/'
+
+############################
+## LANGUAGE
+############################
+
+defaultContentLanguage: en
+languageCode: en-us
+hasCJKLanguage: false
+
+############################
+## ADVANCED
+############################
+
+enableGitInfo: false
+summaryLength: 30
+pagination:
+  pagerSize: 10
+enableEmoji: true
+enableRobotsTXT: true
+timeout: 600000
+
+outputs:
+  home: [html, rss]
+  page: [html]
+  section: [html, rss]
+
+############################
+## MARKUP (syntax highlighting + LaTeX)
+############################
+
+markup:
+  highlight:
+    noClasses: false
+  goldmark:
+    renderer:
+      unsafe: true
+    extensions:
+      passthrough:
+        delimiters:
+          block: [['\[', '\]'], ['$$', '$$']]
+          inline: [['\(', '\)']]
+        enable: true
+
+enableInlineShortcodes: true
+
+############################
+## SERVICES
+############################
+
+services:
+  googleAnalytics:
+    ID: ""

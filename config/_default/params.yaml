@@ -1,0 +1,48 @@
+# SITE SETUP (Hextra theme params)
+# Docs: https://imfing.github.io/hextra/docs/guide/configuration/
+
+description: >
+  Adaptive statistics and machine learning for AdTech — mathematical field
+  notes and research by Gwennaëlle Mabon.
+
+navbar:
+  displayTitle: true
+  displayLogo: false
+  width: normal
+
+theme:
+  # light | dark | system
+  default: system
+  displayToggle: true
+
+footer:
+  enable: true
+  displayCopyright: true
+  displayPoweredBy: false
+  width: normal
+
+displayUpdatedDate: false
+
+search:
+  enable: true
+  type: flexsearch
+  flexsearch:
+    index: content
+    tokenize: forward
+
+page:
+  width: normal
+
+highlight:
+  copy:
+    enable: true
+    display: hover
+
+toc:
+  displayTags: false
+
+imageZoom:
+  enable: false
+
+comments:
+  enable: false

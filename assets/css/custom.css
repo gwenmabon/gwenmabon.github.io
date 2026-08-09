@@ -1,0 +1,24 @@
+/* Distinct accent color, away from Hextra's default purple */
+:root {
+  --primary-hue: 170deg;
+  --primary-saturation: 65%;
+  --primary-lightness: 32%;
+}
+
+:root[data-theme="dark"] {
+  --primary-lightness: 55%;
+}
+
+/* Monospace accent for code and headings — "quant notebook" feel */
+@layer theme {
+  :root {
+    --hx-default-mono-font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+}
+
+.content h1,
+.content h2,
+.content h3 {
+  font-family: var(--hx-default-mono-font-family);
+  letter-spacing: -0.01em;
+}
