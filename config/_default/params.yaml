@@ -2,8 +2,7 @@
 # Docs: https://imfing.github.io/hextra/docs/guide/configuration/
 
 description: >
-  Adaptive statistics and machine learning for AdTech — mathematical field
-  notes and research by Gwennaëlle Mabon.
+  Personal site of Gwennaëlle Mabon — statistics, machine learning, and research.
 
 navbar:
   displayTitle: true
