@@ -4,7 +4,7 @@ cascade:
   type: docs
 ---
 
-Academic research from my PhD in Statistics (2013–2017): publications, talks, and thesis.
+Academic research from my PhD in Statistics : publications, talks, and thesis.
 
 {{< cards >}}
   {{< card link="publications" title="Publications" icon="document-text" >}}

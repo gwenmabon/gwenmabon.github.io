@@ -20,5 +20,5 @@ layout: hextra-home
 {{< cards >}}
   {{< card link="field-notes" title="Field Notes" icon="variable" subtitle="Notes on statistics and machine learning" >}}
   {{< card link="about" title="About" icon="user" subtitle="Who I am and what I do" >}}
-  {{< card link="research" title="Research" icon="academic-cap" subtitle="Publications and talks from my PhD (2013–2017)" >}}
+  {{< card link="research" title="Research" icon="academic-cap" subtitle="Publications and talks from my PhD" >}}
 {{< /cards >}}
