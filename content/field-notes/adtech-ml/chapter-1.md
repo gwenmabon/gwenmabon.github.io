@@ -128,6 +128,10 @@ and can bid accordingly.
 
 ### Utility and Expected Utility
 
+For a single auction, the realized payout is \(vY\): the advertiser pays
+\(v\) if the event occurs (\(Y=1\)) and nothing otherwise. The expected
+value \(V(x) = v \cdot \mu(x)\) is simply the expectation of this quantity.
+
 **Definition (Utility).**
 In an auction where a bidder with value \(V(x)\) submits bid \(b\) and, upon
 winning, pays a cost \(c\), the utility of the outcome is:
