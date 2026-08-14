@@ -1,0 +1,108 @@
+<svg viewBox="0 0 520 480" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, -apple-system, sans-serif">
+  <style>
+    .light { --surface: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #8a8985; --grid: #e5e5e3; --series-1: #2a78d6; --series-2: #e87ba4; --diagonal: #8a8985; }
+    .dark  { --surface: #1a1a19; --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #6b6a65; --grid: #2e2e2d; --series-1: #3987e5; --series-2: #d55181; --diagonal: #6b6a65; }
+    @media (prefers-color-scheme: dark) { .auto { --surface: #1a1a19; --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #6b6a65; --grid: #2e2e2d; --series-1: #3987e5; --series-2: #d55181; --diagonal: #6b6a65; } }
+    @media (prefers-color-scheme: light) { .auto { --surface: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #8a8985; --grid: #e5e5e3; --series-1: #2a78d6; --series-2: #e87ba4; --diagonal: #8a8985; } }
+    text { fill: var(--text-secondary); }
+    .title { fill: var(--text-primary); font-weight: 600; font-size: 14px; }
+    .axis-label { font-size: 12px; fill: var(--text-secondary); }
+    .tick-label { font-size: 11px; fill: var(--text-muted); }
+    .legend-text { font-size: 11px; fill: var(--text-secondary); }
+  </style>
+  <g class="auto">
+    <!-- Background -->
+    <rect width="520" height="480" fill="var(--surface)" rx="0"/>
+
+    <!-- Title -->
+    <text x="70" y="30" class="title">Reliability Diagram</text>
+
+    <!-- Chart area: x=70..470, y=50..430, so 400×380 -->
+    <!-- Grid lines -->
+    <g stroke="var(--grid)" stroke-width="1">
+      <line x1="70" y1="50" x2="70" y2="430"/>
+      <line x1="70" y1="430" x2="470" y2="430"/>
+      <!-- Horizontal grid -->
+      <line x1="70" y1="354" x2="470" y2="354" stroke-dasharray="2,4"/>
+      <line x1="70" y1="278" x2="470" y2="278" stroke-dasharray="2,4"/>
+      <line x1="70" y1="202" x2="470" y2="202" stroke-dasharray="2,4"/>
+      <line x1="70" y1="126" x2="470" y2="126" stroke-dasharray="2,4"/>
+      <line x1="70" y1="50" x2="470" y2="50" stroke-dasharray="2,4"/>
+      <!-- Vertical grid -->
+      <line x1="150" y1="50" x2="150" y2="430" stroke-dasharray="2,4"/>
+      <line x1="230" y1="50" x2="230" y2="430" stroke-dasharray="2,4"/>
+      <line x1="310" y1="50" x2="310" y2="430" stroke-dasharray="2,4"/>
+      <line x1="390" y1="50" x2="390" y2="430" stroke-dasharray="2,4"/>
+      <line x1="470" y1="50" x2="470" y2="430" stroke-dasharray="2,4"/>
+    </g>
+
+    <!-- Axis labels -->
+    <text x="270" y="465" text-anchor="middle" class="axis-label">Predicted probability p̂</text>
+    <text x="20" y="240" text-anchor="middle" class="axis-label" transform="rotate(-90,20,240)">Observed frequency ȳ</text>
+
+    <!-- X tick labels -->
+    <text x="70"  y="448" text-anchor="middle" class="tick-label">0.0</text>
+    <text x="150" y="448" text-anchor="middle" class="tick-label">0.2</text>
+    <text x="230" y="448" text-anchor="middle" class="tick-label">0.4</text>
+    <text x="310" y="448" text-anchor="middle" class="tick-label">0.6</text>
+    <text x="390" y="448" text-anchor="middle" class="tick-label">0.8</text>
+    <text x="470" y="448" text-anchor="middle" class="tick-label">1.0</text>
+
+    <!-- Y tick labels -->
+    <text x="62" y="434" text-anchor="end" class="tick-label">0.0</text>
+    <text x="62" y="358" text-anchor="end" class="tick-label">0.2</text>
+    <text x="62" y="282" text-anchor="end" class="tick-label">0.4</text>
+    <text x="62" y="206" text-anchor="end" class="tick-label">0.6</text>
+    <text x="62" y="130" text-anchor="end" class="tick-label">0.8</text>
+    <text x="62" y="54"  text-anchor="end" class="tick-label">1.0</text>
+
+    <!-- Perfect calibration diagonal (dashed) -->
+    <!-- x: 70 + val*400, y: 430 - val*380 -->
+    <line x1="70" y1="430" x2="470" y2="50" stroke="var(--diagonal)" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+    <!-- Model A (calibrated): blue -->
+    <!-- Points: (0.05,0.04) (0.15,0.14) (0.25,0.27) (0.35,0.33) (0.45,0.46) (0.55,0.53) (0.65,0.67) (0.75,0.74) (0.85,0.86) (0.95,0.94) -->
+    <!-- x = 70 + p*400, y = 430 - obs*380 -->
+    <polyline fill="none" stroke="var(--series-1)" stroke-width="2"
+      points="90,414.8 130,376.8 170,327.4 210,304.6 250,255.2 290,228.6 330,175.4 370,148.8 410,103.2 450,72.8"/>
+    <g fill="var(--series-1)">
+      <circle cx="90"  cy="414.8" r="5"/>
+      <circle cx="130" cy="376.8" r="5"/>
+      <circle cx="170" cy="327.4" r="5"/>
+      <circle cx="210" cy="304.6" r="5"/>
+      <circle cx="250" cy="255.2" r="5"/>
+      <circle cx="290" cy="228.6" r="5"/>
+      <circle cx="330" cy="175.4" r="5"/>
+      <circle cx="370" cy="148.8" r="5"/>
+      <circle cx="410" cy="103.2" r="5"/>
+      <circle cx="450" cy="72.8"  r="5"/>
+    </g>
+
+    <!-- Model B (over-confident): pink/magenta -->
+    <!-- Points: (0.05,0.02) (0.15,0.08) (0.25,0.15) (0.35,0.22) (0.45,0.30) (0.55,0.38) (0.65,0.52) (0.75,0.61) (0.85,0.73) (0.95,0.85) -->
+    <polyline fill="none" stroke="var(--series-2)" stroke-width="2"
+      points="90,422.4 130,399.6 170,373 210,346.4 250,316 290,285.6 330,232.4 370,198.2 410,152.6 450,107"/>
+    <g fill="var(--series-2)">
+      <rect x="84"  y="416.4" width="12" height="12" rx="2"/>
+      <rect x="124" y="393.6" width="12" height="12" rx="2"/>
+      <rect x="164" y="367"   width="12" height="12" rx="2"/>
+      <rect x="204" y="340.4" width="12" height="12" rx="2"/>
+      <rect x="244" y="310"   width="12" height="12" rx="2"/>
+      <rect x="284" y="279.6" width="12" height="12" rx="2"/>
+      <rect x="324" y="226.4" width="12" height="12" rx="2"/>
+      <rect x="364" y="192.2" width="12" height="12" rx="2"/>
+      <rect x="404" y="146.6" width="12" height="12" rx="2"/>
+      <rect x="444" y="101"   width="12" height="12" rx="2"/>
+    </g>
+
+    <!-- Legend -->
+    <line x1="90" y1="68" x2="110" y2="68" stroke="var(--diagonal)" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <text x="116" y="72" class="legend-text">Perfect calibration</text>
+
+    <circle cx="100" cy="88" r="5" fill="var(--series-1)"/>
+    <text x="116" y="92" class="legend-text">Model A (calibrated)</text>
+
+    <rect x="94" y="102" width="12" height="12" rx="2" fill="var(--series-2)"/>
+    <text x="116" y="112" class="legend-text">Model B (over-confident)</text>
+  </g>
+</svg>
