@@ -2,6 +2,7 @@
 title: "The Price of a Probability"
 weight: 20
 math: true
+draft: true
 ---
 
 In Chapter 1, we derived the optimal bid as a function of \(\mu(x) = \mathbb{E}[Y \mid X = x]\), the expected value of a target event given the impression context. We left \(\mu(x)\) abstract. This chapter makes it concrete : what exactly do we estimate, what does the data look like, and what properties must the estimate satisfy for the bid to be correct ?

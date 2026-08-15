@@ -1,0 +1,16 @@
+<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, -apple-system, sans-serif">
+  <style>
+    .light { --surface: #fcfcfb; --text-muted: #8a8985; --bar-bg: #e5e5e3; --bar-fill: #8a8985; }
+    .dark  { --surface: #1a1a19; --text-muted: #6b6a65; --bar-bg: #2e2e2d; --bar-fill: #6b6a65; }
+    @media (prefers-color-scheme: dark) { .auto { --surface: #1a1a19; --text-muted: #6b6a65; --bar-bg: #2e2e2d; --bar-fill: #6b6a65; } }
+    @media (prefers-color-scheme: light) { .auto { --surface: #fcfcfb; --text-muted: #8a8985; --bar-bg: #e5e5e3; --bar-fill: #8a8985; } }
+  </style>
+  <g class="auto">
+    <rect width="200" height="50" fill="var(--surface)"/>
+    <text x="100" y="16" text-anchor="middle" fill="var(--text-muted)" font-size="8" letter-spacing="0.06em">WORK IN PROGRESS</text>
+    <rect x="40" y="24" width="120" height="6" rx="3" fill="var(--bar-bg)"/>
+    <rect x="40" y="24" width="42" height="6" rx="3" fill="var(--bar-fill)"/>
+    <rect x="79" y="24" width="3" height="6" fill="var(--bar-bg)"/>
+    <text x="100" y="44" text-anchor="middle" fill="var(--text-muted)" font-size="7">Coming soon</text>
+  </g>
+</svg>
