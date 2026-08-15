@@ -55,11 +55,11 @@ sequenceDiagram
     Note over U,DSPn: ≤ 100 ms total
 ```
 
-> [!NOTE]
-> The entire round-trip (bid request, ML scoring, bid response, auction,
-> creative fetch, render) must complete in under 100 ms. Network
-> round-trip alone consumes 20 to 40 ms, leaving the DSP roughly 10 to
-> 30 ms for model inference.
+The SSP sets a timeout per request (the `tmax` field in OpenRTB),
+typically 100 to 300 ms for the full round-trip. After network
+overhead, the DSP has roughly 50 ms to retrieve features, run
+inference, and return a bid. Model inference itself is under 5 ms
+in production. The bottleneck is usually feature retrieval.
 
 ## Auction Theory
 
@@ -203,11 +203,9 @@ with positive expected surplus, while bidding \(b\) loses : utility \(0\).
 In both cases, \(b^{*}\) performs at least as well, and strictly better on a set
 of positive probability. \(\blacksquare\)
 
-> [!IMPORTANT]
-> The beauty of the second-price mechanism is that the optimal strategy does
-> not depend on the behaviour of other bidders. Each bidder can act
-> independently. In this setting, the entire ML problem reduces to :
-> **estimate \(\mu(x)\) well**.
+What matters here is that the optimal strategy does not depend on what
+other bidders do. Each bidder can act independently. So in a second-price
+modelisation, the entire ML problem reduces to one thing : estimate \(\mu(x)\) well.
 
 ### First-Price Auctions : The Shading Problem
 
@@ -269,10 +267,9 @@ competing-bid distribution. It governs how much to shade :
 - When competition is sparse (small \(f_M\)), the ratio is large. Shade
   aggressively : there is room to bid well below the value and still win.
 
-> [!NOTE]
-> The formula is implicit : \(b^{*}\) appears on both sides. In practice, we
-> estimate \(F_M\) and \(f_M\) from historical win/loss data and solve
-> numerically. This is the subject of Chapter 4.
+The formula is implicit : \(b^{*}\) appears on both sides. In practice, we
+estimate \(F_M\) and \(f_M\) from historical win/loss data and solve
+numerically. This is the subject of Chapter 4.
 
 ### Summary
 
@@ -292,13 +289,11 @@ times out with a "no-bid." The budget breaks down as follows :
 
 | Component | Budget | Constraint |
 |-----------|-------:|------------|
-| Network round-trip | 30 ms | Geography, CDN placement |
-| Feature retrieval | 15 ms | Redis/DynamoDB + feature store latency |
-| Model inference | 20 ms | Model complexity, batch size, hardware |
-| Post-bid logic | 10 ms | Pacing, frequency capping, budget checks |
-| Creative fetch | 15 ms | CDN, creative pre-caching |
-| Safety buffer | 10 ms | Variance absorption |
-| **Total** | **100 ms** | |
+| Network round-trip (SSP to DSP and back) | 20 ms | Geography, colocation with exchanges |
+| Feature retrieval and computation | 5-10 ms | Key-value store (sub-ms), feature store, real-time aggregations |
+| Model inference | 1-5 ms | Model complexity, batch size, hardware |
+| Post-bid logic | 1-5 ms | Pacing, frequency capping, budget checks |
+| **Total (must fit exchange `tmax`)** | **~50 ms** | Typical `tmax` : 100-200 ms |
 
 ### The Stochastic Deadline
 
@@ -337,12 +332,8 @@ $$
 J_{\text{net}}(b, \theta) = J(b) \cdot \mathbb{P}\bigl(\mathcal{T}(x, \theta) \leq T\bigr)
 $$
 
-> [!IMPORTANT]
-> Even if the mean latency is well within the SLA, a model with high variance
-> (heavy-tailed latency distribution, often log-normal) will have a p99 that
-> exceeds the deadline. Each timeout is a missed auction and lost revenue.
-> A model that is "fast on average" but unstable directly amputates the
-> expected profit through pure system effects.
+Even if the mean latency is within the SLA, a model with high variance
+will have a p99 that exceeds the deadline.  A model that is fast on average but unstable loses revenue through pure system effects. Each timeout is a missed auction.
 
 ### The Joint Optimisation Problem
 
@@ -404,11 +395,9 @@ $$
 where \(\alpha\) is a tolerance on the timeout rate (e.g. \(\alpha = 0.01\)
 for a p99 constraint).
 
-> [!WARNING]
-> Discriminative metrics such as AUC measure ranking quality only. They do
-> not penalise miscalibration. In RTB, a well-ranked but miscalibrated model
-> will bid the wrong amounts. We use proper scoring rules instead. We return
-> to this point in Chapter 2.
+AUC only measures ranking. It says nothing about calibration.
+A model that ranks well but outputs wrong probabilities will bid
+wrong amounts. We need a loss function that penalises calibration errors directly. More on this in Chapter 2.
 
 
 ## Key Takeaways
