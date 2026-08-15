@@ -21,9 +21,9 @@ Before diving into the mathematics, let's map the actors.
 
 | Actor | Abbreviation | Role |
 |-------|:---:|------|
-| Advertiser | --- | Pays to show ads ; defines campaign goals (purchases, sign-ups, engagement). |
-| Publisher | --- | Owns the website or app inventory ; monetises attention. |
-| Demand-Side Platform | DSP | Bids on behalf of advertisers. Runs the ML models. This is us. |
+| Advertiser | --- | Pays to show ads. Defines campaign goals (purchases, sign-ups, engagement). |
+| Publisher | --- | Owns the website or app inventory. Monetises attention. |
+| Demand-Side Platform | DSP | Bids on behalf of advertisers. *Runs the ML models.* |
 | Supply-Side Platform | SSP | Runs the auction on behalf of publishers. |
 | Ad Exchange | AdX | Marketplace connecting DSPs and SSPs (often merged with SSP). |
 | Data Management Platform | DMP | Aggregates audience data for targeting (cookies, device IDs). |
@@ -272,7 +272,7 @@ competing-bid distribution. It governs how much to shade :
 > [!NOTE]
 > The formula is implicit : \(b^{*}\) appears on both sides. In practice, we
 > estimate \(F_M\) and \(f_M\) from historical win/loss data and solve
-> numerically. This is the subject of Chapter 5.
+> numerically. This is the subject of Chapter 4.
 
 ### Summary
 
