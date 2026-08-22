@@ -13,20 +13,20 @@ In Chapter 1, we derived the optimal bid as a function of \(\mu(x) = \mathbb{E}[
 
 The target event \(Y\) depends on the advertiser's campaign objective. Two quantities dominate :
 
-- **Click-through rate (CTR)** : the probability that a user clicks on the ad. \(p(\text{click} \mid x)\).
-- **Conversion rate (CVR)** : the probability that a user converts (purchases, installs, signs up). \(p(\text{conversion} \mid x)\).
+- **Click-through rate (CTR)** : the probability that a user clicks on the ad denoted \(p(\text{click} \mid x)\).
+- **Conversion rate (CVR)** : the probability that a user converts (purchases, installs, signs up) denoted \(p(\text{conversion} \mid x)\).
 
-A conversion does not always require a click. A user may see an ad, not click, and convert later through another channel. These *view-through conversions* (or post-impression conversions) are real and measurable. However, the dominant signal in most campaigns remains the post-click path. In practice, most DSPs decompose the conversion probability along this path :
+Here there are two ways of modeling the problem. The first one is to consider that conversion happens after an impression. Indeed, a user may see an ad, convert later through another channel. This is called *view-through conversions* or post-impression conversions. The second one is considering that a conversion is posterior to a click. We model a particular funnel: serve an impression, click on the ad then convert. The dominant signal in most campaigns remains the post-click modeling. You can consider that a click better demonstrates the impact of the ad leading to a conversion. In practice, most DSPs decompose the conversion probability along this path :
 
 $$
 p(\text{conversion} \mid x) = p(\text{click} \mid x) \cdot p(\text{conversion} \mid \text{click}, x)
 $$
 
-The two factors are estimated by separate models, trained on different datasets and at different scales. The CTR model sees every impression ; the post-click conversion model sees only clicks. This factorisation is not strictly necessary, but it is practical : training a single end-to-end model directly on \(p(\text{conversion} \mid x)\) is possible in principle, but conversion labels are so sparse that the signal-to-noise ratio makes learning difficult. Decomposing the problem gives each model a richer supervision signal at its own stage of the funnel.
+The two factors are estimated by separate models, trained on different datasets and at different scales. The CTR model sees every impression. The post-click conversion model sees only clicks. This factorisation is not strictly necessary, but it is practical : training a single end-to-end model directly on \(p(\text{conversion} \mid x)\) is possible in principle, but conversion labels are so sparse that the signal-to-noise ratio makes learning difficult. Decomposing the problem gives each model a richer supervision signal at its own stage of the funnel.
 
 ### The Class Imbalance Reality
 
-These are extremely rare events. Typical orders of magnitude :
+Clicks and conversions are extremely rare events. Typical orders of magnitude :
 
 | Event | Rate | Positive examples per million impressions |
 |-------|:----:|:-----------------------------------------:|
@@ -36,19 +36,19 @@ These are extremely rare events. Typical orders of magnitude :
 
 The CTR model predicts probabilities around 0.1 -- 0.3%. The end-to-end conversion probability \(p(\text{conversion} \mid x)\) is often around 0.001 -- 0.01%. This extreme imbalance has direct consequences :
 
-- **Evaluation** : accuracy is meaningless (a model that always predicts 0 achieves 99.9% accuracy). We need metrics that are sensitive to the positive class.
+- **Evaluation** : accuracy is meaningless here. A model that always predicts 0 achieves 99.9% accuracy. We need metrics that are sensitive to the positive class.
 - **Calibration** : a small absolute error on a small probability is a large relative error. If the true conversion rate is 0.01% and the model predicts 0.02%, the prediction is off by 100%.
 - **Training** : gradient updates are dominated by the negative class. Techniques like negative downsampling are common, but they shift the predicted probabilities and require post-hoc correction.
 
 ### The Quantity That Enters the Bid
 
-In the bid formula from Chapter 1, \(\mu(x)\) is the probability of the advertiser's target event. For a CPA (cost-per-action) campaign :
+In the bid formula from Chapter 1, \(\mu(x)\) is the probability of the advertiser's target event. Then if we are running a campaign for a client who wants us to generate conversions, we will compute:
 
 $$
 \hat{\mu}(x) = \hat{p}(\text{click} \mid x) \cdot \hat{p}(\text{conversion} \mid \text{click}, x)
 $$
 
-This is the product of two model outputs. If either model is miscalibrated, the bid is wrong. The rest of this chapter focuses on what calibration means, how to measure it, and how to enforce it.
+Ultimately, $\hat{\mu}(x)$ is estimated via the product of two different models. Then if either model is miscalibrated, the bid we offer will be off. The rest of this chapter focuses on what calibration means, how to measure it, and how to enforce it.
 
 ## Why Calibration Matters More Than AUC
 
@@ -62,13 +62,13 @@ $$
 
 where \(F\) and \(f\) are the CDF and density of the highest competing bid.
 
-If \(\hat{\mu}\) is wrong, the bid is wrong. Suppose the model is multiplicatively miscalibrated : \(\hat{\mu}(x) = (1+\epsilon)\,\mu(x)\) for some \(\epsilon > 0\). The bid becomes :
+Since \(\hat{\mu}(x)\) is the product of two independently estimated quantities, calibration errors in either factor propagate directly into the bid. Suppose the model is multiplicatively miscalibrated : \(\hat{\mu}(x) = (1+\epsilon)\,\mu(x)\) for some \(\epsilon > 0\). The bid becomes :
 
 $$
 b^{*}_{\text{miscal}} \approx v(1+\epsilon)\,\mu(x) - \frac{F(b^{*})}{f(b^{*})}
 $$
 
-The shading term is unchanged (it depends on the market, not our estimate), so the overbid is approximately \(v\epsilon\,\mu(x)\) per impression. At scale, this compounds : a 20% calibration error (\(\epsilon = 0.2\)) on a billion daily auctions directly erodes margin. Good AUC with bad calibration means **correct ranking but wrong prices**. We win the right impressions but pay too much.
+The shading term is unchanged because it depends only on the market. The overbid is approximately \(v\epsilon\,\mu(x)\) per impression. At scale, this compounds : a 20% calibration error (\(\epsilon = 0.2\)) on a billion daily auctions directly erodes margin. Good AUC with bad calibration means **correct ranking but wrong prices**. We win the right impressions but pay too much.
 
 ### A Concrete Example
 
@@ -88,7 +88,7 @@ We showed that miscalibration directly erodes margin. To control it, we need a m
 
 ### Expected Calibration Error (ECE)
 
-The most direct approach : partition predictions into \(K\) bins by predicted probability. In bin \(k\), let \(n_k\) be the count, \(\bar{p}_k\) the mean prediction, and \(\bar{y}_k\) the observed frequency. The Expected Calibration Error is the weighted average gap :
+The most direct approach is to partition predictions into \(K\) bins by predicted probability. In bin \(k\), let \(n_k\) be the count, \(\bar{p}_k\) the mean prediction, and \(\bar{y}_k\) the observed frequency. The Expected Calibration Error is the weighted average gap :
 
 $$
 \text{ECE} = \sum_{k=1}^{K} \frac{n_k}{n} \lvert \bar{p}_k - \bar{y}_k \rvert
@@ -160,11 +160,7 @@ This is the same structure as a bias-variance decomposition :
 - **RES** (resolution) measures how well the model separates groups with different base rates. Higher is better (it is subtracted). The constant model that always predicts \(\bar{y}\) has \(\text{RES} = 0\).
 - **UNC** (uncertainty) is the irreducible variance of the outcome. Fixed for a given dataset.
 
-> [!NOTE]
-> The decomposition reveals that a good Brier Score requires
-> *both* calibration (low REL) *and* discrimination (high
-> RES). In adtech, we optimise REL first because it directly affects
-> bid accuracy.
+ This decomposition reveals that a good Brier Score requires *both* calibration (low REL) *and* discrimination (high RES). In adtech, we optimise REL first because it directly affects bid accuracy.
 
 ## The Log-Likelihood of a Bernoulli Problem
 
@@ -188,17 +184,29 @@ $$
 \mathcal{L}(\theta) = -\frac{1}{n} \sum_{i=1}^{n} \bigl[ y_i \log \hat{\mu}_\theta(x_i) + (1 - y_i) \log(1 - \hat{\mu}_\theta(x_i)) \bigr]
 $$
 
-This is not a choice. It is the natural loss function of the problem. Any model that estimates \(\mu(x)\) should be trained by maximising this likelihood.
+When taking a parametric modeling approach, we find that the natural loss function of the problem is the log-loss. Therefore, any model that estimates \(\mu(x)\) should be trained by maximising this likelihood.
 
 ### Relationship to KL Divergence
 
-Log-loss can be written as :
+To understand what the log-loss actually measures, let us decompose it. Write \(\mu(x) = p(Y=1 \mid x)\) for the true conditional probability. The per-observation log-loss is :
+
+$$
+-\bigl[y \log \hat{\mu}(x) + (1-y)\log(1-\hat{\mu}(x))\bigr]
+$$
+
+Now add and subtract the log of the true distribution :
+
+$$
+= -\bigl[y \log \mu(x) + (1-y)\log(1-\mu(x))\bigr] + \bigl[y \log\frac{\mu(x)}{\hat{\mu}(x)} + (1-y)\log\frac{1-\mu(x)}{1-\hat{\mu}(x)}\bigr]
+$$
+
+The first term is \(H(Y \mid x)\), the entropy of the true distribution — irreducible, independent of the model. The second term is exactly the Kullback-Leibler divergence \(D_{\text{KL}}(\mu \,\|\, \hat{\mu})\). In expectation :
 
 $$
 \mathcal{L} = H(Y) + D_{\text{KL}}(\mu \,\|\, \hat{\mu})
 $$
 
-where \(H(Y)\) is the entropy of the true distribution and \(D_{\text{KL}}\) is the Kullback-Leibler divergence. Minimising log-loss is equivalent to minimising the divergence between the true and estimated distributions.
+Since \(H(Y)\) is fixed by the data, the only quantity the model can reduce is \(D_{\text{KL}}\). Minimising log-loss is equivalent to minimising the divergence between the true and estimated distributions. This places our training objective within the broader framework of information theory. A connection we will not explore here, but that runs through much of what follows on calibration.
 
 ## From Logistic Regression to Calibration
 
@@ -214,7 +222,7 @@ The mean predicted probability equals the observed frequency. This is a necessar
 
 ### Complex Models and the Calibration Gap
 
-To capture nonlinear patterns, we turn to more expressive models : gradient-boosted trees, random forests, deep networks. These models still minimise the log-loss \(\mathcal{L}\), but they no longer satisfy the simple first-order condition above. Several mechanisms break calibration :
+To capture nonlinear patterns, we can use more expressive models : gradient-boosted trees, random forests, deep networks. These models still minimise the log-loss \(\mathcal{L}\), but they no longer satisfy the simple first-order condition above. Several mechanisms break calibration :
 
 - **Regularisation** (L2 penalty, max depth, dropout) constrains the model away from the maximum likelihood solution. The resulting \(\hat{\mu}\) minimises a penalised objective, not the likelihood itself.
 - **Early stopping** halts optimisation before convergence. The gradient of \(\mathcal{L}\) has not vanished, so the calibration condition does not hold.
@@ -224,9 +232,9 @@ In practice, these models achieve better discrimination than logistic regression
 
 ### Post-Hoc Recalibration
 
-We face a trade-off : logistic regression is calibrated but underfits ; complex models capture the structure of \(\mu(x)\) but produce miscalibrated scores. The standard solution is to separate the two problems. First, train an expressive model for discrimination. Then, freeze its parameters and learn a monotonic mapping from its raw scores to calibrated probabilities on a held-out calibration set.
+We saw that logistic regression is calibrated but underfits and complex models fit better but are miscalibrated. We face a classic trade-off of machine learning. The standard solution is then to separate the two problems. First, train a model that captures the complexity of the underlying problem. Then, freeze its parameters and learn a monotonic mapping from its raw scores to calibrated probabilities on a held-out calibration set. For this, there a 3 well known methods.
 
-**Platt scaling.** Fit a logistic regression on the model's raw scores :
+**Platt scaling.** Parametric approach. Fit a logistic regression on the model's raw scores :
 
 $$
 \hat{p}_{\text{cal}} = \sigma(a \cdot s + b)
@@ -234,7 +242,7 @@ $$
 
 where \(s\) is the uncalibrated score and \(a, b\) are learned. This is a two-parameter recalibration that corrects global bias and scale.
 
-**Isotonic regression.** A non-parametric approach : fit a monotonically non-decreasing step function mapping raw scores to calibrated probabilities. More flexible than Platt scaling but requires more data and can overfit on small calibration sets.
+**Isotonic regression.** Non-parametric approach. Fit a monotonically non-decreasing step function mapping raw scores to calibrated probabilities. More flexible than Platt scaling but requires more data and can overfit on small calibration sets.
 
 **Temperature scaling.** For neural networks : divide the pre-activation output \(z = w^\top h + b\) (the logit) by a learned temperature \(T > 0\) :
 
