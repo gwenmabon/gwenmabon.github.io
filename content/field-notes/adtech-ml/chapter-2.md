@@ -57,13 +57,15 @@ In most ML applications, we care about *ranking* : which user is more likely to 
 In a first-price auction :
 
 $$
-b^{*} = v\,\hat{\mu}(x) - \frac{F_M(b^{*})}{f_M(b^{*})}
+b^{*} = v\,\hat{\mu}(x) - \frac{F(b^{*})}{f(b^{*})}
 $$
+
+where \(F\) and \(f\) are the CDF and density of the highest competing bid.
 
 If \(\hat{\mu}\) is wrong, the bid is wrong. Suppose the model is multiplicatively miscalibrated : \(\hat{\mu}(x) = (1+\epsilon)\,\mu(x)\) for some \(\epsilon > 0\). The bid becomes :
 
 $$
-b^{*}_{\text{miscal}} \approx v(1+\epsilon)\,\mu(x) - \frac{F_M(b^{*})}{f_M(b^{*})}
+b^{*}_{\text{miscal}} \approx v(1+\epsilon)\,\mu(x) - \frac{F(b^{*})}{f(b^{*})}
 $$
 
 The shading term is unchanged (it depends on the market, not our estimate), so the overbid is approximately \(v\epsilon\,\mu(x)\) per impression. At scale, this compounds : a 20% calibration error (\(\epsilon = 0.2\)) on a billion daily auctions directly erodes margin. Good AUC with bad calibration means **correct ranking but wrong prices**. We win the right impressions but pay too much.

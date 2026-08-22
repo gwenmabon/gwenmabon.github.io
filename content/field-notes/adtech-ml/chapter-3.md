@@ -194,8 +194,10 @@ This allows testing whether a new exploration strategy or a new model would impr
 In Chapters 1 and 2, the bid was :
 
 $$
-b^* = v \cdot \hat{\mu}(x) - \frac{F_M(b^*)}{f_M(b^*)}
+b^* = v \cdot \hat{\mu}(x) - \frac{F(b^*)}{f(b^*)}
 $$
+
+where \(F\) and \(f\) are the CDF and density of the highest competing bid.
 
 When we add exploration, the system sometimes bids on impressions where \(\hat{\mu}(x)\) is low or uncertain. If the bid wins, we pay for an impression we do not expect to convert. The short-term expected utility of an exploration bid is negative.
 

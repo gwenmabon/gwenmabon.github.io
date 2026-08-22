@@ -7,8 +7,8 @@ draft: true
 
 In Chapter 4, we derived the shaded bid
 \(b^* = v - F(b^*)/f(b^*)\), where \(v = \hat{\mu}(x) \cdot \text{payout}\)
-is the impression value from Chapter 2, and \(F, f\) are the competing-bid
-CDF and density. The derivation maximised the expected surplus per impression
+is the impression value from Chapter 2, \(F\) and \(f\) are the CDF and
+density of the highest competing bid, and \(b^*\) is the optimal bid. The derivation maximised the expected surplus per impression
 without constraint. But every campaign has a daily budget \(B\). If we bid
 the full shaded value on all available traffic, the expected daily spend is :
 

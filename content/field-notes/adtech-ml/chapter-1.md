@@ -90,7 +90,7 @@ define the following random variables :
 - \(Y \in \{0, 1\}\) : the Bernoulli variable indicating the occurrence
   of a target event (click, conversion, purchase).
 - \(M\) : the random variable representing the highest competing bid
-  (*market price*), with CDF \(F_M\) and density \(f_M\).
+  (*market price*). We write \(F\) for its CDF and \(f\) for its density.
 - \(v > 0\) : the unit value of the event for the advertiser (the *payout*).
 
 The objective of the ML model is to estimate the conditional expectation :
@@ -170,7 +170,7 @@ is :
 
 $$
 J(b) = \mathbb{E}\bigl[\mathbb{E}[U(b, M) \mid M, X]\bigr]
-     = \int_{0}^{b} \bigl(v\mu(x) - m\bigr)\, f_M(m)\, dm
+     = \int_{0}^{b} \bigl(v\mu(x) - m\bigr)\, f(m)\, dm
 $$
 
 **Proposition 1 (Truthful bidding).**
@@ -180,14 +180,14 @@ is \(b^{*} = v \cdot \mu(x)\). Moreover, this strategy is weakly dominant : it y
 *Proof.* The first-order condition gives :
 
 $$
-\frac{dJ}{db} = \bigl(v\mu(x) - b\bigr)\, f_M(b) = 0
+\frac{dJ}{db} = \bigl(v\mu(x) - b\bigr)\, f(b) = 0
 $$
 
-Since \(f_M(b) > 0\), this yields \(b^{*} = v\mu(x)\). The second-order
+Since \(f(b) > 0\), this yields \(b^{*} = v\mu(x)\). The second-order
 condition confirms this is a maximum :
 
 $$
-\frac{d^2J}{db^2} = -f_M(b) < 0
+\frac{d^2J}{db^2} = -f(b) < 0
 $$
 
 To see that the strategy is weakly dominant, compare any bid \(b \neq v\mu(x)\)
@@ -222,53 +222,53 @@ extracted.
 By the law of iterated expectations :
 
 $$
-J(b) = \bigl(v\mu(x) - b\bigr) \cdot F_M(b)
+J(b) = \bigl(v\mu(x) - b\bigr) \cdot F(b)
 $$
 
 This expression reveals a fundamental tension :
 
 - Decreasing \(b\) increases the surplus \((v\mu(x) - b)\) per win, but
-  reduces the probability \(F_M(b)\) of winning.
+  reduces the probability \(F(b)\) of winning.
 - Increasing \(b\) increases the win probability, but compresses
   the margin.
 
 The optimal bid balances these two forces exactly.
 
 **Proposition 2 (Optimal shading).**
-*Assume \(F_M\) is differentiable with \(f_M(b) > 0\) in a neighbourhood
+*Assume \(F\) is differentiable with \(f(b) > 0\) in a neighbourhood
 of \(b^{*}\). The bid maximising \(J(b)\) satisfies :*
 
 $$
-b^{*} = v\mu(x) - \frac{F_M(b^{*})}{f_M(b^{*})}
+b^{*} = v\mu(x) - \frac{F(b^{*})}{f(b^{*})}
 $$
 
-*Proof.* Differentiating \(J(b) = (v\mu(x) - b)\,F_M(b)\) with respect to \(b\) :
+*Proof.* Differentiating \(J(b) = (v\mu(x) - b)\,F(b)\) with respect to \(b\) :
 
 $$
-\frac{dJ}{db} = -F_M(b) + (v\mu(x) - b)\,f_M(b)
+\frac{dJ}{db} = -F(b) + (v\mu(x) - b)\,f(b)
 $$
 
 Setting this to zero :
 
 $$
-(v\mu(x) - b)\,f_M(b) = F_M(b)
+(v\mu(x) - b)\,f(b) = F(b)
 $$
 
-which rearranges to \(b^{*} = v\mu(x) - F_M(b^{*})/f_M(b^{*})\). The second-order
-condition \(d^2J/db^2 < 0\) is satisfied under log-concavity of \(F_M\). \(\blacksquare\)
+which rearranges to \(b^{*} = v\mu(x) - F(b^{*})/f(b^{*})\). The second-order
+condition \(d^2J/db^2 < 0\) is satisfied under log-concavity of \(F\). \(\blacksquare\)
 
 **Interpretation.**
-The quantity \(F_M(b)/f_M(b)\) is the *inverse hazard rate* of the
+The quantity \(F(b)/f(b)\) is the *inverse hazard rate* of the
 competing-bid distribution. It governs how much to shade :
 
-- When competition is dense near \(v\mu(x)\) (large \(f_M\)), the ratio is
+- When competition is dense near \(v\mu(x)\) (large \(f\)), the ratio is
   small. Shade modestly : bidding far below the value would lose too
   many auctions.
-- When competition is sparse (small \(f_M\)), the ratio is large. Shade
+- When competition is sparse (small \(f\)), the ratio is large. Shade
   aggressively : there is room to bid well below the value and still win.
 
 The formula is implicit : \(b^{*}\) appears on both sides. In practice, we
-estimate \(F_M\) and \(f_M\) from historical win/loss data and solve
+estimate \(F\) and \(f\) from historical win/loss data and solve
 numerically. This is the subject of Chapter 4.
 
 ### Summary
@@ -276,7 +276,7 @@ numerically. This is the subject of Chapter 4.
 | Property | Second-Price | First-Price |
 |----------|:---:|:---:|
 | Winner pays | 2nd highest bid | Own bid |
-| Optimal bid | \(b^{*} = v\mu(x)\) | \(b^{*} = v\mu(x) - \frac{F_M(b^{*})}{f_M(b^{*})}\) |
+| Optimal bid | \(b^{*} = v\mu(x)\) | \(b^{*} = v\mu(x) - \frac{F(b^{*})}{f(b^{*})}\) |
 | DSP complexity | Low | High (requires shading model) |
 
 ## Inference Under the Real-Time Constraint
@@ -408,7 +408,7 @@ wrong amounts. We need a loss function that penalises calibration errors directl
    the expected utility framework. Accurate estimation of \(\mu(x)\) is
    the core ML problem.
 3. In second-price auctions, bidding \(V(x)\) is optimal. In first-price auctions, the optimal bid satisfies
-   \(b^{*} = V(x) - F_M(b^{*})/f_M(b^{*})\), requiring estimation of the competing-bid distribution.
+   \(b^{*} = V(x) - F(b^{*})/f(b^{*})\), requiring estimation of the competing-bid distribution.
 4. Inference latency is a stochastic variable. The effective bid is
    \(b_{\text{eff}} = b \cdot \mathbf{1}_{\{\tau \leq T\}}\). The net
    expected utility integrates timeout risk :
