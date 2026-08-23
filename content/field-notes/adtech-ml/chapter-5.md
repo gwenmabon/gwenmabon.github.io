@@ -17,9 +17,7 @@ $$
 $$
 
 For a typical campaign seeing millions of bid requests per day, this sum
-exceeds \(B\) by orders of magnitude. The DSP must decide which
-impressions to bid on and how much to reduce each bid. This is the
-pacing problem.
+exceeds \(B\) by orders of magnitude. The DSP must reduce its bids so that total expected spend fits within \(B\). This is the **pacing problem**.
 
 ## The Constrained Optimisation
 
@@ -38,26 +36,33 @@ expected spend must not exceed \(B\).
 **The Lagrangian.** We introduce a multiplier \(\lambda \geq 0\) :
 
 $$
-\mathcal{L} = \sum_{i=1}^{N}(v_i - b_i)\,F_i(b_i)
-- \lambda\left(\sum_{i=1}^{N} b_i\,F_i(b_i) - B\right)
+\mathcal{L} = \sum_{i=1}^{N}(v_i - b_i)\,F_i(b_i) - \lambda\left(\sum_{i=1}^{N} b_i\,F_i(b_i) - B\right)
 $$
 
 Collecting terms for each impression :
 
 $$
-\mathcal{L} = \sum_{i=1}^{N}\bigl[v_i - (1+\lambda)\,b_i\bigr]\,F_i(b_i)
-+ \lambda B
+\mathcal{L} = \sum_{i=1}^{N}\bigl[v_i - (1+\lambda)\,b_i\bigr]\,F_i(b_i) + \lambda B
 $$
 
-**The first-order condition.** Differentiating with respect to
-\(b_i\) :
+**The KKT conditions.** The solution \((b_1^*, \ldots, b_N^*, \lambda)\) must satisfy four conditions :
+
+1. **Stationarity** : the gradient of \(\mathcal{L}\) with respect to each \(b_i\) is zero.
+2. **Primal feasibility** : the budget constraint holds, \(\sum_i b_i\,F_i(b_i) \leq B\).
+3. **Dual feasibility** : the multiplier is non-negative, \(\lambda \geq 0\).
+4. **Budget either binds or it does not** : \(\lambda\,(\sum_i b_i\,F_i(b_i) - B) = 0\).
+
+We use each of these in what follows.
+
+**Stationarity.** Differentiating \(\mathcal{L}\) with respect to
+\(b_i\) and setting to zero :
 
 $$
 \frac{\partial \mathcal{L}}{\partial b_i}
 = -(1+\lambda)\,F_i(b_i) + \bigl[v_i - (1+\lambda)\,b_i\bigr]\,f_i(b_i) = 0
 $$
 
-Setting to zero and solving for \(b_i\) :
+Solving for \(b_i\) :
 
 $$
 b_i^* = \frac{v_i}{1 + \lambda} - \frac{F_i(b_i^*)}{f_i(b_i^*)}
@@ -67,16 +72,15 @@ This is the shading formula from Chapter 4, applied to a discounted
 value \(\tilde{v}_i = v_i/(1+\lambda)\). The shading term \(F/f\)
 is unchanged : it depends on the market, not on our budget.
 
-**Complementary slackness.** The KKT conditions require :
+**Budget either binds or it does not.** The fourth condition requires :
 
 $$
 \lambda \left(\sum_{i=1}^{N} b_i^*\,F_i(b_i^*) - B\right) = 0
 $$
 
-Either \(\lambda = 0\) (the budget is not binding and we bid the
-unconstrained shaded value) or the budget binds with equality.
-There is no middle ground : a campaign either has excess budget
-or it spends exactly \(B\).
+Either \(\lambda = 0\) and we bid the unconstrained shaded value, or \(\lambda > 0\) and the budget is spent exactly.
+
+**Dual feasibility** (\(\lambda \geq 0\)) will appear later in the gradient descent update, where we project \(\lambda\) back to zero whenever the update would make it negative.
 
 ## The Shadow Price of Budget
 
@@ -127,10 +131,10 @@ campaign spends. The total surplus \(S_{\text{online}}\) is
 necessarily less than \(S^*\).
 
 **Online regret.** The gap \(S^* - S_{\text{online}}\) measures
-how much surplus we lose by not knowing the future. This is analogous
-to the bandit regret from Chapter 3. A good pacer has sublinear
-regret : the per-impression loss shrinks as the day progresses and
-the estimate of \(\lambda\) stabilises.
+how much surplus we lose by not knowing the future, similar
+to the bandit regret from Chapter 3. If the per-impression loss stays constant over the day, the total loss grows linearly with \(T\). A pacer with sublinear regret improves its estimate of \(\lambda\) as the day progresses, so the per-impression loss shrinks and the average cost goes to zero.
+
+The two ways a pacer fails illustrate this. If \(\lambda\) reacts too slowly to a traffic spike, the budget binds early : a campaign that exhausts its budget at 2pm leaves roughly half its potential surplus on the table. Symmetrically, if \(\lambda\) stays too high all day, 40% of the budget remains at 6pm and the pacer drops \(\lambda\) close to zero, bidding aggressively on whatever traffic is left at 3-5x the daily average cost per conversion. Both failures are linear regret : the pacer does not learn \(\lambda\) fast enough. We need a controller that converges.
 
 ## Adapting \(\lambda\) in Real Time
 
@@ -171,15 +175,12 @@ $$
 | Integral | \(K_i\) | Corrects accumulated drift over the day |
 | Derivative | \(K_d\) | Dampens oscillations when \(e_t\) changes fast |
 
-The gains \(K_p, K_i, K_d\) are hyperparameters. In practice, the
-integral term matters most : without it, the pacer can systematically
-under- or over-shoot all day long. With it, the accumulated error
-forces \(\lambda\) back on target.
+The gains \(K_p, K_i, K_d\) are hyperparameters. The integral term matters most in practice. Without it, the pacer systematically under- or over-shoots. The accumulated error in \(K_i \sum e_s\) corrects this drift.
 
 ## Non-Stationary Traffic
 
 The uniform target \(B_t = B \cdot t/T\) assumes traffic is constant
-over the day. It is not. Let \(q(t)\) be the density of impression
+over the day, but impression volume varies by hour. Let \(q(t)\) be the density of impression
 volume over time, normalised so that \(\int_0^T q(t)\,dt = 1\). The
 fraction of impressions arriving before time \(t\) is :
 
@@ -200,39 +201,17 @@ fighting the traffic pattern.
 
 **Estimating \(q(t)\).** The volume density is estimated from
 historical data : same day of week, same campaign type, same geo.
-This is a forecasting problem. The forecast does not need to be
-precise ; it needs to be better than uniform. Even a rough
-day-of-week average reduces the regret of the online pacer.
+Even a rough day-of-week average is better than the uniform assumption and reduces the regret of the online pacer.
 
-**Value also varies.** Volume is not the only non-stationary
-quantity. The average impression value \(\bar{v}(t)\) changes over
-the day. Evening traffic on e-commerce sites converts at higher
-rates. Spending budget uniformly over time means buying cheap
-morning impressions and missing expensive evening ones. The optimal
-\(B_t\) should account for both volume and value, which requires
-forecasting \(q(t) \cdot \bar{v}(t)\) jointly.
+**Value also varies.** Impression volume is not the only thing that changes over the day. Evening traffic on e-commerce sites converts at higher rates. Spending budget uniformly means buying cheap morning impressions and missing expensive evening ones. The optimal \(B_t\) should account for both volume and value, which requires forecasting their joint distribution over time.
 
-## Failure Modes
+## Multi-Campaign Allocation
 
-**Early exhaustion.** If \(\lambda\) reacts too slowly to a traffic
-spike, the budget binds early. A campaign that exhausts its budget
-at 2pm leaves \(\sum_{i \in \text{afternoon}} v_i\,F_i(b_i^*)\)
-euros of potential surplus on the table. For a 10,000-euro daily
-budget, losing 8 hours of a 16-hour day means roughly 5,000 euros
-of missed surplus, assuming uniform value.
-
-**Forced spend.** The symmetric failure : \(\lambda\) is too high
-all day, and 40% of the budget remains at 6pm. The pacer drops
-\(\lambda\) close to zero, bidding aggressively on whatever traffic
-is left. The cost per conversion in the last two hours can be 3-5x
-the daily average because the pacer is buying whatever remains, not
-what is valuable.
-
-**Multi-campaign allocation.** A DSP runs hundreds of campaigns
-with overlapping targeting. Each campaign has its own \(\lambda_i\).
-When two campaigns target the same impression, the DSP must choose
-which one bids. This is a second-level allocation problem : given
-impression \(x\), assign it to the campaign \(j\) that maximises :
+A DSP runs hundreds of campaigns with overlapping targeting. Each
+campaign has its own \(\lambda_j\). When two campaigns target the
+same impression, the DSP must choose which one bids. This is a
+second-level allocation problem : given impression \(x\), assign it
+to the campaign \(j\) that maximises :
 
 $$
 j^* = \arg\max_j \left[\frac{v_j(x)}{1+\lambda_j} - \frac{F(b^*)}{f(b^*)}\right]
@@ -242,18 +221,28 @@ The campaign with the highest budget-adjusted value wins the right
 to bid. This couples all pacers together : a change in one
 campaign's \(\lambda\) shifts impressions to other campaigns.
 
+The single-assignment model is a simplification. A DSP can bid multiple campaigns on the same impression. The coupling only matters when campaigns share targeting.
+
+This connects to the exploration-exploitation trade-off from
+Chapter 3 : each campaign's \(\lambda_j\) affects which impressions
+it wins, which determines its training data. A campaign with high
+\(\lambda_j\) wins less traffic, accumulates fewer labels, and its
+model uncertainty grows. The pacing and exploration problems are
+coupled through the win rate.
+
 ## Key Takeaways
 
 1. The budget constraint discounts the value in the bid formula :
    \(b_i^* = v_i/(1+\lambda) - F_i/f_i\), where \(\lambda\) is
    the shadow price of budget.
-2. Complementary slackness : a campaign either has excess budget
-   (\(\lambda = 0\)) or spends exactly \(B\). No middle ground.
+2. Budget either binds or it does not : a campaign either has excess budget
+   (\(\lambda = 0\)) or spends exactly \(B\).
 3. In production, \(\lambda\) is adapted online via dual gradient
    descent or PID control. The gap between online and offline
    surplus is the pacing regret.
 4. Traffic is non-stationary. The pacing target should track the
-   volume density \(Q(t)\), not a uniform line.
+   volume density \(q(t)\), not a uniform line.
 5. Multi-campaign allocation couples all pacers : impression
-   assignment depends on the relative \(\lambda\) values across
-   campaigns.
+   assignment depends on the relative \(\lambda_j\) values across
+   campaigns, and the resulting win rates feed back into each
+   campaign's training data.

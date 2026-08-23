@@ -13,7 +13,7 @@ $$
 
 where \(F\) and \(f\) are the CDF and density of the highest competing bid.
 
-Chapters 2 and 3 addressed \(\mu(x)\) : how to estimate it, how to calibrate it, and how to protect its training data from feedback loops. The formula still contains one unknown : \(F\), the CDF of the highest competing bid. Without an estimate of \(F\), the formula is unusable. This chapter is about estimating it.
+Chapters 2 and 3 addressed \(\mu(x)\) : its estimation, its calibration, and the feedback loop in its training data. The formula still contains one unknown, \(F\). Without an estimate of \(F\), the formula is unusable. This chapter is about estimating it.
 
 ## What We Observe
 
@@ -24,7 +24,7 @@ After each auction, the DSP learns whether it won or lost.
 
 We want to estimate \(F(b \mid x) = P(m \leq b \mid x)\), the probability of winning at bid level \(b\) given auction context \(x\). But for most auctions, we do not observe \(m\) directly. We observe a binary outcome at a single bid level.
 
-A regression model trained to predict \(m\) would need the target variable to be observed. It is not. What we have is a threshold and an indicator : did the competing bid fall below the threshold ? This is **censored data**. The observation is incomplete, and the incompleteness is systematic : we censor more when we bid low, less when we bid high.
+A regression model trained to predict \(m\) would need the target variable to be observed. What we have is a threshold and an indicator : did the competing bid fall below the threshold ? The observation is incomplete, and the incompleteness is systematic : we censor more when we bid low, less when we bid high. This is **censored data**.
 
 ## The Censored Data Likelihood
 
@@ -50,7 +50,7 @@ $$
 \ell_{\text{Bernoulli}} = \sum_{i=1}^{n} \bigl[y_i \log \mu(x_i) + (1 - y_i) \log(1 - \mu(x_i))\bigr]
 $$
 
-The structure is identical. The Bernoulli likelihood estimates a probability from binary labels. The censored likelihood estimates a distribution from incomplete observations of a continuous variable. The indicator \(\delta_i\) plays the role of \(y_i\), the density plays the role of \(\mu\), and the survival function plays the role of \(1 - \mu\).
+The structure is identical. The Bernoulli likelihood estimates a probability from binary labels. The censored likelihood estimates a distribution from incomplete observations of a continuous variable. In both cases, each observation contributes a term for the event (\(\delta_i\) or \(y_i\)) weighted by the log of a model quantity, plus a term for the non-event weighted by the log of its complement.
 
 ## The Survival Framework
 
@@ -94,11 +94,13 @@ $$
 \ell(\beta, h_0) = \sum_{i:\delta_i=1} \bigl[\log h_0(t_i) + \beta^\top x_i\bigr] - \sum_{i=1}^{n} \exp(\beta^\top x_i) \int_0^{t_i} h_0(u)\,du
 $$
 
-This depends on \(\beta\) (a finite-dimensional parameter) and \(h_0(\cdot)\) (a function, infinite-dimensional). Maximising jointly is hard. Cox's insight was to avoid it.
+This depends on \(\beta\) (a finite-dimensional parameter) and \(h_0(\cdot)\) (a function, infinite-dimensional). Maximising jointly over both is hard, and Cox's insight was to eliminate \(h_0\) from the estimation of \(\beta\).
 
 ### The partial likelihood
 
-Order the uncensored events by bid level : \(t_{(1)} < t_{(2)} < \cdots < t_{(D)}\). At each event time \(t_{(j)}\), define the **risk set** \(\mathcal{R}_j = \{i : t_i \geq t_{(j)}\}\), the set of auctions that could have produced a win at bid level \(t_{(j)}\). The probability that the observed winner is auction \((j)\), given that exactly one event occurred at \(t_{(j)}\), is :
+Order the uncensored events by bid level : \(t_{(1)} < t_{(2)} < \cdots < t_{(D)}\). At each event time \(t_{(j)}\), define the **risk set** \(\mathcal{R}_j = \{i : t_i \geq t_{(j)}\}\). This is the set of auctions that could have produced a win at bid level \(t_{(j)}\).
+
+The probability that the observed winner is auction \((j)\), given that exactly one event occurred at \(t_{(j)}\), is :
 
 $$
 \frac{h(t_{(j)} \mid x_{(j)})}{\sum_{i \in \mathcal{R}_j} h(t_{(j)} \mid x_i)}
@@ -112,7 +114,7 @@ $$
 L_P(\beta) = \prod_{j=1}^{D} \frac{\exp(\beta^\top x_{(j)})}{\sum_{i \in \mathcal{R}_j} \exp(\beta^\top x_i)}
 $$
 
-This depends on \(\beta\) alone. We estimate \(\beta\) by maximising \(\log L_P\), using standard gradient-based optimisation. The partial likelihood has the same structure as a softmax : at each event, the model assigns probabilities to all auctions in the risk set, and we maximise the probability of the observed outcome. Compare this to the cross-entropy loss from Chapter 2 : the mathematical structure of learning is the same. What changes is the data.
+This depends on \(\beta\) alone. We estimate \(\beta\) by maximising \(\log L_P\), using standard gradient-based optimisation. The partial likelihood has the same structure as a softmax : at each event, the model assigns probabilities to all auctions in the risk set, and we maximise the probability of the observed outcome.
 
 ### Recovering the baseline
 
@@ -146,7 +148,7 @@ The model has two components : \(\hat{\beta}\) (which features shift the competi
 
 ### What the features capture
 
-The features \(x\) enter through the multiplicative term \(\exp(\beta^\top x)\). Each coefficient \(\beta_k\) measures how feature \(k\) shifts the hazard. A positive \(\beta_k\) means higher competition (harder to win at any bid level). A negative \(\beta_k\) means less competition.
+The features \(x\) enter through the multiplicative term \(\exp(\beta^\top x)\). Each coefficient \(\beta_k\) measures how feature \(k\) shifts the hazard. A positive \(\beta_k\) means higher competition. A negative \(\beta_k\) means less competition.
 
 | Feature | Sign of \(\beta\) | Effect on shading |
 |---------|:-:|---|
@@ -159,17 +161,13 @@ A video ad on a premium publisher at 8pm has \(\exp(\beta^\top x)\) much higher 
 
 ## Sensitivity to Density Errors
 
-The bid formula divides by \(f\). Errors in the density are amplified. We can quantify this.
-
-Write \(g(b) = F(b)/f(b)\), the shading term. A first-order approximation of the bid error from an error \(\Delta f\) in the density estimate gives :
+The bid formula divides by \(f\). Errors in the density are amplified. A first-order approximation of the bid error from an error \(\Delta f\) in the density estimate gives :
 
 $$
 \Delta b^* \approx \frac{F(b^*)}{f(b^*)^2}\,\Delta f
 $$
 
 The error is proportional to \(1/f^2\). Where competition is sparse (\(f\) small), the bid error is large.
-
-### A concrete example
 
 Take the simplest case : competing bids uniform on \([0, c]\). Then \(F(b) = b/c\), \(f(b) = 1/c\), and the shading term is \(F/f = b\). The optimal bid satisfies \(b^* = v\mu(x) - b^*\), giving :
 
@@ -183,13 +181,13 @@ $$
 (0.15 - 0.075) \times 0.375 = 0.028\text{ euros}
 $$
 
-If the DSP bids 0.10 euros (too high) : surplus = \((0.15 - 0.10) \times 0.50 = 0.025\) euros. If the DSP bids 0.05 euros (too low) : surplus = \((0.15 - 0.05) \times 0.25 = 0.025\) euros. Both errors cost 0.003 euros per auction. At 10 million daily auctions, that is 30,000 euros per day.
+If the DSP bids 0.10 euros (too high) : surplus = \((0.15 - 0.10) \times 0.50 = 0.025\) euros. If the DSP bids 0.05 euros (too low) : surplus = \((0.15 - 0.05) \times 0.25 = 0.025\) euros. Both errors cost 0.003 euros per auction. At 10 million daily auctions, that is 30,000 euros per day. The loss is symmetric around the optimum : overbidding wins at negative margin, underbidding loses winnable auctions.
 
-The optimum is sharp, and the loss is symmetric around it. Overshading (bid too low) loses auctions. Undershading (bid too high) wins auctions at negative margin.
+The sensitivity analysis above assumes the proportional hazards model is correct. When it is not, the density errors are structural : no amount of data fixes a misspecified model. This motivates an alternative approach.
 
 ## Beyond Cox : The Direct Win-Rate Model
 
-The proportional hazards assumption says that the ratio of hazards between two auction contexts is constant across all bid levels. This can be violated. If competition on publisher A is concentrated around 0.05 euros and on publisher B is spread between 0.01 and 0.20 euros, a multiplicative shift cannot capture the difference in shape.
+The proportional hazards assumption says that the ratio of hazards between two auction contexts is constant across all bid levels. If competition on publisher A is concentrated around 0.05 euros and on publisher B is spread between 0.01 and 0.20 euros, a multiplicative shift cannot capture the difference in shape.
 
 An alternative is to skip the survival framework entirely and train a classifier directly on the binary outcome.
 
@@ -197,13 +195,13 @@ An alternative is to skip the survival framework entirely and train a classifier
 
 Train a model \(\hat{F}(b, x)\) on tuples \((b_i, x_i, \delta_i)\) where the bid \(b\) is a feature alongside the auction context \(x\), and the label \(\delta_i\) indicates a win. The model output is interpreted as \(F(b \mid x) = P(\text{win} \mid b, x)\).
 
-This is appealing : it uses the same binary classification pipeline as the CTR model from Chapter 2, trained with the same log-loss. No survival analysis, no proportional hazards assumption. But the bid formula needs both \(F\) and \(f\). Recovering the density requires differentiating the model output with respect to \(b\) :
+This uses the same binary classification pipeline as the CTR model from Chapter 2, trained with the same log-loss. No survival analysis, no proportional hazards assumption. But the bid formula needs both \(F\) and \(f\). Recovering the density requires differentiating the model output with respect to \(b\) :
 
 $$
 \hat{f}(b \mid x) = \frac{\partial \hat{F}(b, x)}{\partial b}
 $$
 
-For a neural network, this is a gradient computation : tractable but noisy. For a gradient-boosted tree, the output is piecewise constant in \(b\), so the derivative is zero almost everywhere and undefined at the splits. Smoothing (kernel density estimation on the tree output) introduces a bandwidth hyperparameter and can bias the density.
+For a neural network, this is a gradient computation : tractable but noisy. For a gradient-boosted tree, the output is piecewise constant in \(b\), so the derivative is zero almost everywhere and undefined at the splits. Smoothing introduces a bandwidth hyperparameter and can bias the density.
 
 ### Comparison
 
@@ -229,7 +227,7 @@ The fix is the same in spirit : monitor and retrain. Most DSPs retrain the shadi
 
 ### Selection bias in shading data
 
-Chapter 3 showed that the CTR model only sees outcomes for impressions it chose to bid on. The same selection bias affects the shading model. The DSP only observes win/loss for auctions where it bid. If it systematically avoids a publisher (because \(\hat{\mu}(x)\) is low there), it collects no data on that publisher's competing-bid distribution. The shading model for that publisher is based on old data or nothing at all.
+Chapter 3 showed that the CTR model only sees outcomes for impressions it won. The same selection bias affects the shading model. The DSP only observes win/loss for auctions where it bid. If it systematically bids low on a publisher (because \(\hat{\mu}(x)\) is low there), it wins few auctions and collects little data on that publisher's competing-bid distribution. The shading model for that publisher is based on sparse data or nothing at all.
 
 The exploration policy from Chapter 3 helps both models. Exploration bids generate data on unfamiliar traffic, which improves both the CTR estimate \(\hat{\mu}(x)\) and the competition estimate \(\hat{F}(b \mid x)\).
 
@@ -239,7 +237,7 @@ The equation \(b^* = v\mu(x) - F(b^*)/f(b^*)\) is implicit : \(b^*\) appears on 
 
 **Bisection** on the interval \([0, v\mu(x)]\) converges in \(\lceil\log_2(v\mu(x)/\epsilon)\rceil\) steps. For \(v\mu(x) = 0.15\) euros and \(\epsilon = 0.001\) euros, that is about 8 iterations. Each iteration evaluates \(F\) and \(f\) once, so the computational cost of shading is roughly 8 lookups in the survival model.
 
-**Guardrails.** The computed bid is clipped to \([\text{floor}, v\mu(x)]\). The floor is the exchange minimum. The ceiling prevents bidding above the impression value, which would guarantee negative surplus. In practice, an additional cap at a fraction of \(v\mu(x)\) (e.g., 90%) protects against density estimation errors in the tail.
+**Guardrails.** The computed bid is clipped to \([\text{floor}, v\mu(x)]\). The floor is the exchange minimum. The ceiling prevents bidding above the impression value. In practice, an additional cap at a fraction of \(v\mu(x)\) (e.g., 90%) protects against density estimation errors in the tail.
 
 Advertisers have daily budgets. The budget constraint modifies the formula by discounting the value :
 
@@ -255,4 +253,4 @@ where \(\lambda \geq 0\) is set by the pacer. This is the subject of Chapter 5.
 2. The Cox PH partial likelihood \(L_P(\beta)\) eliminates the baseline hazard \(h_0\), making the model semi-parametric. This is critical because the shape of the competing-bid distribution varies widely across contexts.
 3. The bid formula divides by \(f\). Errors in the density estimate are amplified by \(1/f^2\) ; at 10M daily auctions, a suboptimal shade costs tens of thousands of euros per day.
 4. The direct win-rate classifier avoids the proportional hazards assumption, but recovering \(f = \partial F/\partial b\) from a classifier is noisy.
-5. The shading model suffers from the same feedback loop as the CTR model (Chapter 3) : the DSP only observes competition on traffic it bid on. Exploration helps both models.
+5. The shading model suffers from the same feedback loop as the CTR model (Chapter 3) : the DSP only observes competition on traffic it wins. Exploration helps both models.
