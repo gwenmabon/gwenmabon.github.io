@@ -2,7 +2,7 @@
 title: "Explore or Exploit"
 weight: 30
 math: true
-draft: true
+
 ---
 
 In Chapters 1 and 2, we derived the optimal bid as a function of \(\mu(x) = \mathbb{E}[Y \mid X = x]\) and showed that the loss function for estimating \(\mu(x)\) is the log-loss, the natural likelihood of a Bernoulli problem. We assumed one thing without stating it : that the training data is drawn from the same distribution as the production traffic.
