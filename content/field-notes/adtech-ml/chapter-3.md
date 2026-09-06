@@ -112,7 +112,7 @@ The algorithm :
 2. Play \(a_t = \arg\max_a \theta_a\).
 3. Observe reward. Update : \(\alpha_{a_t} \mathrel{+}= r_t\), \(\beta_{a_t} \mathrel{+}= (1 - r_t)\).
 
-An action with few observations has a wide posterior ; its sample is sometimes high, sometimes low, so it gets explored occasionally. An action with many observations has a concentrated posterior ; its sample is close to \(\hat{\mu}_a\) every time. The probability that action \(a\) is played at round \(t\) is :
+An action with few observations has a wide posterior. Its sample is sometimes high, sometimes low, so it gets explored occasionally. An action with many observations has a concentrated posterior. Its sample is close to \(\hat{\mu}_a\) every time. The probability that action \(a\) is played at round \(t\) is :
 
 $$
 P(a_t = a) = \mathbb{E}\!\left[\prod_{a^{\prime} \ne a} F_{a^{\prime}}(\theta_a)\right]
@@ -135,7 +135,7 @@ The regret bound is the same as UCB : \(O(\sqrt{KT \log T})\). In practice, Thom
 
 ## Model Requirements
 
-Both UCB and Thompson Sampling require the model to produce uncertainty estimates, not just a point prediction. UCB needs \(\hat{\sigma}(x, a)\) ; Thompson Sampling needs a posterior distribution over \(\mu(x, a)\). The gradient-boosted trees from Chapter 2 output a scalar \(\hat{\mu}(x, a)\) with no measure of confidence. Bayesian approaches (variational inference, MC dropout, or ensembles with calibrated variance) give both a prediction and a distribution. In practice, some DSPs run a separate model for uncertainty alongside the main CTR model ; others redesign the CTR model to output distributional predictions.
+Both UCB and Thompson Sampling require the model to produce uncertainty estimates, not just a point prediction. UCB needs \(\hat{\sigma}(x, a)\). Thompson Sampling needs a posterior distribution over \(\mu(x, a)\). The gradient-boosted trees from Chapter 2 output a scalar \(\hat{\mu}(x, a)\) with no measure of confidence. Bayesian approaches (variational inference, MC dropout, or ensembles with calibrated variance) give both a prediction and a distribution. In practice, some DSPs run a separate model for uncertainty alongside the main CTR model. Others redesign the CTR model to output distributional predictions.
 
 The feedback loop from the beginning of this chapter is strongest on audience segments. Retargeted users accumulate data quickly because the model bids high and wins often. Prospecting users stay data-poor because the model bids low and wins rarely. Thompson Sampling corrects this asymmetry through the posterior : the wide posterior on prospecting users generates occasional high samples that trigger exploration bids.
 
@@ -191,5 +191,5 @@ In practice, DSPs set the exploration budget between 5% and 10% of campaign spen
 2. The feedback loop (predictions \(\to\) bids \(\to\) win rate \(\to\) training data \(\to\) predictions) makes the bias self-reinforcing.
 3. Regret \(R_T\) measures the total cost of not knowing which action is best. \(\varepsilon\)-greedy has linear regret \(O(\varepsilon T)\) while UCB and Thompson Sampling achieve \(O(\sqrt{KT \log T})\).
 4. UCB and Thompson Sampling require the CTR model to produce uncertainty estimates, which rules out standard gradient-boosted trees.
-5. IPW corrects the selection bias in training data ; the weighted loss \(\mathcal{L}_{\text{IPW}}\) is an unbiased estimate of the loss under \(P_X\). Counterfactual evaluation uses propensity scores to test new strategies offline.
+5. IPW corrects the selection bias in training data. The weighted loss \(\mathcal{L}_{\text{IPW}}\) is an unbiased estimate of the loss under \(P_X\). Counterfactual evaluation uses propensity scores to test new strategies offline.
 6. Exploration has a measurable short-term cost that the ML engineer must budget and track.
