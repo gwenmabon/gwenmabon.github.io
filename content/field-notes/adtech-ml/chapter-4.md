@@ -2,7 +2,7 @@
 title: "Bid Shading"
 weight: 40
 math: true
-draft: true
+
 ---
 
 In Chapter 1 we derived the optimal bid in a first-price auction :
@@ -251,6 +251,6 @@ where \(\lambda \geq 0\) is set by the pacer. This is the subject of Chapter 5.
 
 1. Estimating \(F\) is a censored data problem. The censored likelihood has the same structure as the Bernoulli likelihood from Chapter 2, with the density and survival function replacing \(\mu\) and \(1-\mu\).
 2. The Cox PH partial likelihood \(L_P(\beta)\) eliminates the baseline hazard \(h_0\), making the model semi-parametric. This is critical because the shape of the competing-bid distribution varies widely across contexts.
-3. The bid formula divides by \(f\). Errors in the density estimate are amplified by \(1/f^2\) ; at 10M daily auctions, a suboptimal shade costs tens of thousands of euros per day.
+3. The bid formula divides by \(f\). Errors in the density estimate are amplified by \(1/f^2\). At 10M daily auctions, a suboptimal shade costs tens of thousands of euros per day.
 4. The direct win-rate classifier avoids the proportional hazards assumption, but recovering \(f = \partial F/\partial b\) from a classifier is noisy.
 5. The shading model suffers from the same feedback loop as the CTR model (Chapter 3) : the DSP only observes competition on traffic it wins. Exploration helps both models.
